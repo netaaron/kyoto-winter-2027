@@ -10,7 +10,7 @@ const STAT = { v: ['v', '已查證'], e: ['e', '估算'], c: ['c', '出發前確
 const tag = s => s && STAT[s] ? `<span class="tag ${STAT[s][0]}">${STAT[s][1]}</span>` : '';
 const gmap = q => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
 const gdir = (o, d, m = 'transit') => 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(o) + '&destination=' + encodeURIComponent(d) + '&travelmode=' + m;
-const PHT = T.photos, psrc = (n, w) => `assets/photos/${n}-${w}.webp`;
+const PHT = T.photos, PV = T.photoVer || {}, psrc = (n, w) => `assets/photos/${n}-${w}.webp${PV[n] ? '?v=' + PV[n] : ''}`;
 const pic = (n, alt, sizes = '100vw', eager) => { const s = PHT[n]; if (!s) return ''; const big = s[s.length - 1];
   return `<img src="${psrc(n, s[0][0])}" srcset="${s.map(([w]) => `${psrc(n, w)} ${w}w`).join(', ')}" sizes="${sizes}" width="${big[0]}" height="${big[1]}" alt="${esc(alt)}"${eager ? '' : ' loading="lazy"'} decoding="async">`; };
 const ptitle = n => { const g = T.gallery.find(x => x.photo === n); return g ? g.t : ''; };
