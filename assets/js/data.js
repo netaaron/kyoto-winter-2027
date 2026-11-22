@@ -20,7 +20,7 @@ window.TRIP = {
   photoNote: '照片與路線地圖為 AI 生成的情境示意圖，不是實地拍攝；京都一月底不一定會下雪。',
 
   hotel: {
-    id: 'hotel', name: '京都十字飯店', en: 'Cross Hotel Kyoto', area: '河原町・三條',
+    id: 'hotel', name: '京都十字飯店', en: 'Cross Hotel Kyoto', nameJa: 'クロスホテル京都', area: '河原町・三條',
     address: '京都市中京區河原町通三條下ル大黑町 71-1', addressJa: '京都府京都市中京区河原町通三条下る大黒町71-1', tel: '075-231-8831',
     checkin: '15:00', checkout: '11:00', perPerson: 6000,
     facts: [
@@ -183,7 +183,25 @@ window.TRIP = {
   checklist: [
     { id: 'pre', name: '出發前', items: ['護照（效期足夠）', '電子機票與登機證', '飯店訂房確認', '和服租借預約：1月29日 09:30', '旅遊平安險與不便險', '日圓現金（部分小店只收現金）', '信用卡（開通海外刷卡）', '網路：eSIM 或 Wi-Fi 分享器'] },
     { id: 'pack', name: '行李', items: ['羽絨外套', '發熱衣與發熱褲', '毛衣', '手套', '圍巾', '防滑好走的鞋', '充電器', '行動電源（只能放隨身行李）'] },
-    { id: 'digital', name: '手機準備', items: ['Google 地圖下載京都離線區域', '翻譯 App', 'iPhone 錢包加入 ICOCA', '航班資訊截圖', '飯店日文地址存在手機', 'HARUKA 車票（線上購買）'] }
+    { id: 'digital', name: '手機準備', items: ['Google 地圖下載京都離線區域', '翻譯 App', 'iPhone 錢包加入 ICOCA', '航班資訊截圖', '飯店日文地址存在手機', 'HARUKA 車票（線上購買）', '把這個網站加到主畫面（Safari：分享 → 加入主畫面）', '兩支手機的旅伴名稱設成同樣順序'] }
+  ],
+
+  weatherUrl: 'https://tenki.jp/forecast/6/29/6110/26100/',
+
+  /* Short Japanese lines to show shop or hotel staff. addr: also show the hotel's Japanese name and address. */
+  phrases: [
+    { k: '寄放行李', ja: '荷物を預かっていただけますか？', ro: 'Nimotsu o azukatte itadakemasu ka?', zh: '可以幫我們寄放行李嗎？' },
+    { k: '我們兩位', ja: '二人です。', ro: 'Futari desu.', zh: '我們兩個人。' },
+    { k: '請給我這個', ja: 'これをください。', ro: 'Kore o kudasai.', zh: '請給我這個。' },
+    { k: '推薦什麼', ja: 'おすすめは何ですか？', ro: 'Osusume wa nan desu ka?', zh: '有什麼推薦的嗎？' },
+    { k: '分開付', ja: '別々に払えますか？', ro: 'Betsubetsu ni haraemasu ka?', zh: '可以分開付錢嗎？' },
+    { k: '可以刷卡嗎', ja: 'カードで払えますか？', ro: 'Kādo de haraemasu ka?', zh: '可以刷卡嗎？' },
+    { k: '辦退稅', ja: '免税の手続きをお願いします。パスポートはこちらです。', ro: 'Menzei no tetsuzuki o onegai shimasu. Pasupōto wa kochira desu.', zh: '麻煩幫我辦退稅，這是護照。' },
+    { k: '不用袋子', ja: '袋は大丈夫です。', ro: 'Fukuro wa daijōbu desu.', zh: '不用袋子，謝謝。' },
+    { k: '廁所在哪', ja: 'トイレはどこですか？', ro: 'Toire wa doko desu ka?', zh: '廁所在哪裡？' },
+    { k: '可以拍照嗎', ja: '写真を撮ってもいいですか？', ro: 'Shashin o totte mo ii desu ka?', zh: '可以拍照嗎？' },
+    { k: '請說慢一點', ja: 'ゆっくり話していただけますか？', ro: 'Yukkuri hanashite itadakemasu ka?', zh: '可以說慢一點嗎？' },
+    { k: '計程車回飯店', ja: 'この住所までお願いします。', ro: 'Kono jūsho made onegai shimasu.', zh: '請載我們到這個地址。', addr: true }
   ],
 
   food: [

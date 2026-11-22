@@ -40,7 +40,10 @@ const IC = {
   trash: 'M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14',
   arrow: 'M4 12h16M14 6l6 6-6 6',
   copy: 'M8 8h12v12H8zM4 16V4h12',
-  ext: 'M14 4h6v6M20 4l-9 9M18 14v6H4V6h6'
+  ext: 'M14 4h6v6M20 4l-9 9M18 14v6H4V6h6',
+  share: 'M12 15V3M7 8l5-5 5 5M5 12v8h14v-8',
+  sun: 'M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
+  talk: 'M4 5h16v11H9l-5 4z'
 };
 const ic = (n, cls = 'i') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${IC[n] || ''}"/></svg>`;
 
@@ -198,9 +201,24 @@ const cats = () => T.budget.categories.filter(c => !S.removed.includes(c.id)).ma
 const toNTD = e => e.cur === 'JPY' ? e.amt * S.rate : e.amt;
 function spend() {
   const per = [0, 0], byCat = {}; let total = 0;
-  S.exp.forEach(e => { const v = toNTD(e); total += v; byCat[e.cat] = (byCat[e.cat] || 0) + v; if (e.who === 2) { per[0] += v / 2; per[1] += v / 2; } else per[e.who] += v; });
-  return { per, byCat, total };
+  let net = 0;
+  S.exp.forEach(e => { const v = toNTD(e); total += v; byCat[e.cat] = (byCat[e.cat] || 0) + v;
+    if (e.who === 2) { per[0] += v / 2; per[1] += v / 2; if (e.pay === 0 || e.pay === 1) net += e.pay === 0 ? v / 2 : -v / 2; } else per[e.who] += v; });
+  return { per, byCat, total, net };
 }
+/* net > 0: B owes A; net < 0: A owes B. Only shared items with a named payer count. */
+const settleText = sp => Math.abs(sp.net) < 1 ? '目前兩人互不相欠' : `${S.names[sp.net > 0 ? 1 : 0]} 應給 ${S.names[sp.net > 0 ? 0 : 1]} ${ntd(Math.abs(sp.net))}`;
+const whoOpts = () => { const d = 's' + (S.lastPay || 0);
+  return [['s0', `兩人平分・${S.names[0]} 付`], ['s1', `兩人平分・${S.names[1]} 付`], ['o0', `只算 ${S.names[0]}`], ['o1', `只算 ${S.names[1]}`]]
+    .map(([v, t]) => `<option value="${v}"${v === d ? ' selected' : ''}>${esc(t)}</option>`).join(''); };
+const parseWho = v => v[0] === 's' ? { who: 2, pay: +v[1] } : { who: +v[1], pay: +v[1] };
+const whoLabel = e => e.who === 2 ? (e.pay === 0 || e.pay === 1 ? `兩人平分・${S.names[e.pay]} 付` : '兩人平分') : S.names[e.who];
+const ledgerText = () => { const sp = spend(); return `京都冬旅 2027 記帳結算\n兩人合計 ${ntd(sp.total)}（共 ${S.exp.length} 筆）\n${S.names[0]} 已花 ${ntd(sp.per[0])}｜${S.names[1]} 已花 ${ntd(sp.per[1])}\n結算：${settleText(sp)}`; };
+const copyText = (txt, h, ok) => { const fail = () => { h.className = 'hint err'; h.textContent = '無法自動複製，請改用分享或截圖。'; };
+  try { navigator.clipboard.writeText(txt).then(() => { h.className = 'hint'; h.textContent = ok; }, fail); } catch (err) { fail(); } };
+const b64u = str => { let bin = ''; new TextEncoder().encode(str).forEach(b => { bin += String.fromCharCode(b); }); return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+const unb64u = str => new TextDecoder().decode(Uint8Array.from(atob(str.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)));
+const syncURL = () => location.origin + location.pathname + '#sync=' + b64u(JSON.stringify({ v: 1, n: S.names, e: S.exp.map(e => [e.id, e.name, e.amt, e.cur, e.cat, e.who, e.day, e.ts, e.pay ?? -1]) }));
 function renderBudget() {
   const box = $('#budgetBox'), cs = cats(), planned = cs.reduce((a, c) => a + (+c.amount || 0), 0), tgt = T.budget.target, diff = tgt - planned;
   const C = 2 * Math.PI * 70; let off = 0;
@@ -225,7 +243,7 @@ function renderBudget() {
         <input class="f-amt" type="number" id="eAmt" inputmode="decimal" min="0" placeholder="金額" aria-label="金額">
         <div class="f-cur seg" role="group" aria-label="幣別"><button type="button" data-cur="JPY" aria-pressed="${S.cur === 'JPY'}">¥</button><button type="button" data-cur="TWD" aria-pressed="${S.cur === 'TWD'}">NT$</button></div>
         <select class="f-cat" id="eCat" aria-label="類別">${opts}</select>
-        <select class="f-who" id="eWho" aria-label="誰付的"><option value="2">兩人平分</option><option value="0">${esc(S.names[0])}</option><option value="1">${esc(S.names[1])}</option></select>
+        <select class="f-who" id="eWho" aria-label="誰付錢、怎麼分">${whoOpts()}</select>
         <select class="f-day" id="eDay" aria-label="哪一天">${T.days.map(d => `<option value="${d.n}"${(tripDay() || 1) === d.n ? ' selected' : ''}>第${'一二三'[d.n - 1]}日</option>`).join('')}<option value="0">行前</option></select>
         <button class="f-go btn solid" type="button" id="eAdd">${ic('plus')}記一筆</button>
       </div>
@@ -233,7 +251,10 @@ function renderBudget() {
       <div class="row2"><label for="rate">匯率：1 日圓 = NT$</label><input type="number" id="rate" step="0.001" min="0" value="${S.rate}" style="width:7em;height:38px"><span>${esc(T.budget.rateNote)}</span></div>
       ${S.exp.length ? `<ul class="cats">${cs.concat([{ id: 'other', name: '其他', color: '#8C9097', amount: 0 }]).filter(c => sp.byCat[c.id] || c.amount).map(c => { const act = (sp.byCat[c.id] || 0) / 2, p = c.amount ? Math.min(100, act / c.amount * 100) : 100; return `<li style="--k:${c.color}"><span>${esc(c.name)}</span><span class="v">${ntd(act)} <small>/ ${c.amount ? ntd(c.amount) : '未編列'}，每人平均</small></span><div class="twin${c.amount && act > c.amount ? ' over' : ''}" style="--p:${p}%"><i></i></div></li>`; }).join('')}</ul>
         <div class="bstat" style="margin-top:16px"><div><span>兩人合計已花</span><b>${ntd(sp.total)}</b></div><div><span>每人平均</span><b>${ntd(sp.total / 2)}</b></div><div class="${tgt - sp.total / 2 < 0 ? 'over' : 'ok'}"><span>每人平均剩餘</span><b>${ntd(tgt - sp.total / 2)}</b></div></div>
-        <ul class="elist">${S.exp.slice().reverse().map(e => { const c = cs.find(x => x.id === e.cat) || { name: '其他' }; return `<li><span class="en1">${esc(e.name)}<small>${e.day ? '第' + '一二三'[e.day - 1] + '日' : '行前'}　${esc(c.name)}　${e.who === 2 ? '兩人平分' : esc(S.names[e.who])}</small></span><span class="amt">${e.cur === 'JPY' ? yen(e.amt) : ntd(e.amt)}${e.cur === 'JPY' ? `<small>${ntd(toNTD(e))}</small>` : ''}</span><button class="iconbtn" type="button" data-del="${e.id}" aria-label="刪除 ${esc(e.name)}">${ic('trash')}</button></li>`; }).join('')}</ul>
+        <div class="settle"><p class="st"><span>結算</span><b>${esc(settleText(sp))}</b></p><p class="sn">只計算「兩人平分」並標明誰付錢的項目，日圓依上面的匯率換算。</p>
+          <div class="sbtns"><button class="btn sm" type="button" id="copySettle">${ic('copy')}複製結算</button><button class="btn sm solid" type="button" id="shareLedger">${ic('share')}把記帳傳給旅伴</button></div>
+          <p class="hint" id="settleHint"></p></div>
+        <ul class="elist">${S.exp.slice().reverse().map(e => { const c = cs.find(x => x.id === e.cat) || { name: '其他' }; return `<li><span class="en1">${esc(e.name)}<small>${e.day ? '第' + '一二三'[e.day - 1] + '日' : '行前'}　${esc(c.name)}　${esc(whoLabel(e))}</small></span><span class="amt">${e.cur === 'JPY' ? yen(e.amt) : ntd(e.amt)}${e.cur === 'JPY' ? `<small>${ntd(toNTD(e))}</small>` : ''}</span><button class="iconbtn" type="button" data-del="${e.id}" aria-label="刪除 ${esc(e.name)}">${ic('trash')}</button></li>`; }).join('')}</ul>
         <div class="confirm" id="clearBox"><button class="link" type="button" id="clearAsk" style="border:0;background:none;cursor:pointer;padding:0">清除全部記帳</button></div>`
       : `<div class="empty">還沒有記帳。第一筆可以先記機票或住宿，<br>出發後每吃一餐、買一樣東西就記一下。<br><button class="btn sm" type="button" id="demo">填入示範資料看看</button></div>`}
     </div></div>`;
@@ -241,7 +262,9 @@ function renderBudget() {
 function addExpense(name, amt, cur, cat, who, day, hintEl) {
   if (!name.trim()) { hintEl.textContent = '請輸入品項名稱。'; hintEl.className = 'hint err'; return false; }
   if (!(amt > 0)) { hintEl.textContent = '請輸入大於 0 的金額。'; hintEl.className = 'hint err'; return false; }
-  S.exp.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: name.trim(), amt, cur, cat, who, day, ts: Date.now() }); save();
+  const w = typeof who === 'string' ? parseWho(who) : { who };
+  if (w.who === 2 && w.pay !== undefined) S.lastPay = w.pay;
+  S.exp.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: name.trim(), amt, cur, cat, who: w.who, ...(w.pay !== undefined ? { pay: w.pay } : {}), day, ts: Date.now() }); save();
   return true;
 }
 document.addEventListener('change', e => {
@@ -257,12 +280,49 @@ document.addEventListener('click', e => {
   if (t.id === 'addCat') { const n = $('#newCat').value.trim(), a = +$('#newAmt').value || 0; if (n) { S.extra.push({ id: 'x' + Date.now().toString(36), name: n, amount: a, color: ['#5E7A8C', '#9A7330', '#6E5A8A', '#3F6B5A'][S.extra.length % 4] }); save(); renderBudget(); } else $('#newCat').focus(); }
   if (t.id === 'resetPlan') { S.plan = {}; S.extra = []; S.removed = []; save(); renderBudget(); }
   if (t.dataset.cur) { S.cur = t.dataset.cur; save(); $$('[data-cur]', t.parentNode).forEach(b => b.setAttribute('aria-pressed', b === t)); }
-  if (t.id === 'eAdd') { if (addExpense($('#eName').value, +$('#eAmt').value, S.cur, $('#eCat').value, +$('#eWho').value, +$('#eDay').value, $('#eHint'))) { renderBudget(); const h = $('#eHint'); h.className = 'hint'; h.textContent = '已記下。'; $('#eName').focus(); } }
+  if (t.id === 'eAdd') { if (addExpense($('#eName').value, +$('#eAmt').value, S.cur, $('#eCat').value, $('#eWho').value, +$('#eDay').value, $('#eHint'))) { renderBudget(); const h = $('#eHint'); h.className = 'hint'; h.textContent = '已記下。'; $('#eName').focus(); } }
   if (t.dataset.del) { S.exp = S.exp.filter(x => x.id !== t.dataset.del); save(); renderBudget(); if (!$('#travel').hidden) renderTravel(); }
-  if (t.id === 'demo') { [['錦市場玉子燒與豆乳甜甜圈', 1600, 'JPY', 'food', 2, 1], ['京都拉麵晚餐', 2400, 'JPY', 'food', 2, 1], ['HARUKA 單程優惠票', 5400, 'JPY', 'transit', 2, 1], ['藥妝店', 3200, 'JPY', 'shop', 0, 1]].forEach(([n, a, c, k, w, d]) => addExpense(n, a, c, k, w, d, $('#eHint') || document.createElement('p'))); renderBudget(); }
+  if (t.id === 'demo') { [['錦市場玉子燒與豆乳甜甜圈', 1600, 'JPY', 'food', 's0', 1], ['京都拉麵晚餐', 2400, 'JPY', 'food', 's1', 1], ['HARUKA 單程優惠票（兩張）', 5400, 'JPY', 'transit', 's0', 1], ['藥妝店', 3200, 'JPY', 'shop', 'o0', 1]].forEach(([n, a, c, k, w, d]) => addExpense(n, a, c, k, w, d, $('#eHint') || document.createElement('p'))); renderBudget(); }
   if (t.id === 'clearAsk') { $('#clearBox').innerHTML = `<span>確定清除 ${S.exp.length} 筆記帳？這個動作無法復原。</span><button class="btn sm shu" type="button" id="clearYes">清除</button><button class="btn sm" type="button" id="clearNo">取消</button>`; }
   if (t.id === 'clearYes') { S.exp = []; save(); renderBudget(); }
   if (t.id === 'clearNo') renderBudget();
+  if (t.id === 'copySettle') copyText(ledgerText(), $('#settleHint'), '已複製結算，可以貼到 LINE。');
+  if (t.id === 'shareLedger') { const url = syncURL(), txt = ledgerText() + '\n\n點這個連結，把我的記帳合併到你的手機：', h = $('#settleHint');
+    if (navigator.share) navigator.share({ title: '京都冬旅記帳', text: txt, url }).catch(() => {});
+    else copyText(txt + '\n' + url, h, '已複製結算與連結，貼到 LINE 傳給旅伴。'); }
+});
+
+/* ---------- merge a companion's ledger from a #sync= link ---------- */
+let syncAdd = null, syncNames = null;
+function syncIn() {
+  const m = location.hash.match(/^#sync=([\w-]+)/), box = $('#syncDlg'); if (!m) return;
+  let p = null; try { p = JSON.parse(unb64u(m[1])); } catch (err) {}
+  if (!p || !Array.isArray(p.e)) {
+    syncAdd = null; box.innerHTML = `<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="syncT"><h2 id="syncT">無法讀取這個連結</h2><p>連結可能被截斷了。請旅伴再傳一次完整的連結。</p><div class="sbtns"><button class="btn solid" type="button" id="syncNo">關閉</button></div></div>`;
+  } else {
+    const have = new Set(S.exp.map(e => e.id)), inc = p.e.map(a => ({ id: a[0], name: a[1], amt: a[2], cur: a[3], cat: a[4], who: a[5], day: a[6], ts: a[7], ...(a[8] === 0 || a[8] === 1 ? { pay: a[8] } : {}) }));
+    syncAdd = inc.filter(e => !have.has(e.id)); syncNames = p.n;
+    const same = S.names[0] === p.n[0] && S.names[1] === p.n[1];
+    box.innerHTML = `<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="syncT"><h2 id="syncT">合併旅伴的記帳</h2>
+      <p>連結裡有 ${inc.length} 筆記帳，其中 <b>${syncAdd.length} 筆</b>是這支手機還沒有的。合併只會新增，不會刪除這支手機上的記錄。</p>
+      ${same ? '' : `<p class="sn">對方設定的旅伴是「${esc(p.n[0])}」與「${esc(p.n[1])}」，這支手機是「${esc(S.names[0])}」與「${esc(S.names[1])}」。兩支手機的順序要一樣，結算才會正確。</p>`}
+      <div class="sbtns">${syncAdd.length ? `<button class="btn solid" type="button" id="syncYes">合併 ${syncAdd.length} 筆</button>` : ''}<button class="btn" type="button" id="syncNo">${syncAdd.length ? '不要合併' : '關閉'}</button></div></div>`;
+  }
+  box.hidden = false; document.body.style.overflow = 'hidden'; const f = $('#syncYes') || $('#syncNo'); if (f) f.focus();
+}
+function syncClose(merged) {
+  $('#syncDlg').hidden = true; document.body.style.overflow = '';
+  history.replaceState(null, '', location.pathname + (merged ? '#budget' : ''));
+  if (merged) $('#budget').scrollIntoView();
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.id === 'syncYes' && syncAdd) {
+    const def = ['旅伴 A', '旅伴 B'];
+    if (S.names[0] === def[0] && S.names[1] === def[1] && syncNames) S.names = syncNames.slice(0, 2);
+    S.exp.push(...syncAdd); S.exp.sort((a, b) => (a.ts || 0) - (b.ts || 0)); save(); renderBudget(); syncClose(true);
+  }
+  if (t.id === 'syncNo') syncClose(false);
 });
 
 /* ---------- transport ---------- */
@@ -323,7 +383,7 @@ function renderTravel() {
   const d = T.days[S.tvDay - 1], next = d.items.find(i => !S.done[i.id]), pl = next && P[next.place];
   const sp = spend(), todays = S.exp.filter(e => e.day === d.n).reduce((a, e) => a + toNTD(e), 0);
   $('#travel').innerHTML = `<div class="wrap">
-    <div class="tvhead"><h1>旅途模式</h1><p>${td ? `今天是旅行第 ${td} 天` : dd > 0 ? `距離出發還有 ${dd} 天，先預覽` : '旅程已結束'}　<a class="link" href="#top">回到旅行手帳</a></p></div>
+    <div class="tvhead"><h1>旅途模式</h1><p>${td ? `今天是旅行第 ${td} 天` : dd > 0 ? `距離出發還有 ${dd} 天，先預覽` : '旅程已結束'}　<a class="link" href="#top">回到旅行手帳</a></p><p class="offl">${offlineNote()}</p></div>
     <div class="daysw" role="group" aria-label="選擇日期">${T.days.map(x => `<button type="button" data-tv="${x.n}" aria-pressed="${x.n === d.n}" style="--c:${DAYC[x.n]}">第${'一二三'[x.n - 1]}日<small>${x.label.slice(0, 5)}</small></button>`).join('')}</div>
     <div class="tvgrid"><div>
       <div class="next" style="--c:${DAYC[d.n]}">${next && (next.photo || pl.photo) ? `<div class="bgp">${pic(next.photo || pl.photo, '', '(max-width:860px) 92vw, 56vw', true)}</div>` : ''}<div class="nextin">${next ? `<div class="lbl">下一站</div><time>${next.start}</time><h2>${esc(next.title)}</h2><p class="en">${esc(next.en)}　至 ${next.end}</p>
@@ -336,11 +396,15 @@ function renderTravel() {
         <div class="qform"><input type="text" id="qName" placeholder="品項" aria-label="品項"><input type="number" id="qAmt" inputmode="decimal" placeholder="金額" aria-label="金額">
           <div class="seg" role="group" aria-label="幣別"><button type="button" data-cur="JPY" aria-pressed="${S.cur === 'JPY'}">¥</button><button type="button" data-cur="TWD" aria-pressed="${S.cur === 'TWD'}">NT$</button></div>
           <select id="qCat" aria-label="類別">${cats().map(c => `<option value="${c.id}"${c.id === 'food' ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}<option value="other">其他</option></select>
+          <select id="qWho" aria-label="誰付錢、怎麼分">${whoOpts()}</select>
           <button class="btn solid" type="button" id="qAdd">${ic('plus')}記一筆</button></div>
         <p class="hint" id="qHint"></p>
-        <div class="qsum"><span>這天兩人合計</span><b>${ntd(todays)}</b></div><div class="qsum"><span>每人平均剩餘</span><b>${ntd(T.budget.target - sp.total / 2)}</b></div></div>
+        <div class="qsum"><span>這天兩人合計</span><b>${ntd(todays)}</b></div><div class="qsum"><span>每人平均剩餘</span><b>${ntd(T.budget.target - sp.total / 2)}</b></div><div class="qsum"><span>結算</span><b class="sm">${esc(settleText(sp))}</b></div></div>
+      <div class="tvbox"><h3>給店員看的日文</h3><p class="tvnote">點一下放大，直接把手機轉給對方看。</p>
+        <div class="phrs">${T.phrases.map((x, i) => `<button type="button" class="phb" data-phr="${i}">${esc(x.k)}</button>`).join('')}</div></div>
       <div class="tvbox"><h3>飯店</h3><div class="copyrow"><p>${T.hotel.name}<br>${T.hotel.addressJa}<br>電話 ${T.hotel.tel}</p><button class="btn sm" type="button" id="copyAddr">${ic('copy')}複製地址</button></div><p class="hint" id="copyHint"></p>
         <a class="link" href="${gdir('', T.hotel.en).replace('origin=&', '')}" target="_blank" rel="noopener">${ic('nav')}回飯店</a></div>
+      <div class="tvbox"><h3>天氣</h3><p class="tvnote">預報出發前一週最準；當天早上再看一次要不要帶傘。</p><a class="link" href="${T.weatherUrl}" target="_blank" rel="noopener">${ic('sun')}京都市天氣預報（tenki.jp）</a></div>
       <div class="tvbox"><h3>緊急電話</h3><p style="margin:0;font:15px/1.7 var(--sans)">警察 110　消防與救護車 119</p></div>
     </div></div></div>`;
 }
@@ -348,9 +412,32 @@ document.addEventListener('click', e => {
   const t = e.target.closest('button'); if (!t) return;
   if (t.dataset.tv) { S.tvDay = +t.dataset.tv; save(); renderTravel(); }
   if (t.dataset.doneid) { if (!S.done[t.dataset.doneid]) toggleDone(t.dataset.doneid); }
-  if (t.id === 'qAdd') { if (addExpense($('#qName').value, +$('#qAmt').value, S.cur, $('#qCat').value, 2, S.tvDay, $('#qHint'))) { renderTravel(); renderBudget(); const h = $('#qHint'); h.className = 'hint'; h.textContent = '已記下，兩人平分。'; } }
+  if (t.id === 'qAdd') { const wv = $('#qWho').value; if (addExpense($('#qName').value, +$('#qAmt').value, S.cur, $('#qCat').value, wv, S.tvDay, $('#qHint'))) { renderTravel(); renderBudget(); const h = $('#qHint'); h.className = 'hint'; h.textContent = '已記下：' + whoLabel(parseWho(wv)) + '。'; } }
+  if (t.dataset.phr) showPhrase(+t.dataset.phr, t);
   if (t.id === 'copyAddr') { const h = $('#copyHint'); try { navigator.clipboard.writeText(T.hotel.addressJa).then(() => { h.textContent = '已複製日文地址，可以貼給計程車司機看。'; }, () => { h.textContent = '無法自動複製，請長按地址選取。'; }); } catch (err) { h.textContent = '無法自動複製，請長按地址選取。'; } }
 });
+
+/* ---------- offline note ---------- */
+function offlineNote() {
+  const sw = 'serviceWorker' in navigator && navigator.serviceWorker.controller, app = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  if (!/github\.io$/.test(location.hostname)) return '';
+  return (sw ? '已存在這支手機：看過的內容沒有網路也能打開。' : '打開一次後會存到這支手機，之後沒有網路也能看。') + (app ? '' : 'iPhone 可在 Safari 按「分享」→「加入主畫面」，像 App 一樣打開。');
+}
+
+/* ---------- phrase cards: show Japanese to staff ---------- */
+let phI = 0, phFrom = null;
+const phDlg = $('#phrDlg');
+function showPhrase(i, from) {
+  const L = T.phrases; phI = (i + L.length) % L.length; if (from) phFrom = from; const x = L[phI];
+  phDlg.innerHTML = `<div class="phin" role="dialog" aria-modal="true" aria-label="${esc(x.k)}">
+    <p class="ja" lang="ja">${esc(x.ja)}</p>${x.addr ? `<p class="jaaddr" lang="ja">${esc(T.hotel.nameJa)}<br>${esc(T.hotel.addressJa).replace('区', '区<br>')}<br>TEL ${T.hotel.tel}</p>` : ''}
+    <p class="ro">${esc(x.ro)}</p><p class="zhm">${esc(x.zh)}</p>
+    <div class="phnav"><button class="btn" type="button" id="phPrev" aria-label="上一句">上一句</button><button class="btn solid" type="button" id="phClose">關閉</button><button class="btn" type="button" id="phNext" aria-label="下一句">下一句</button></div></div>`;
+  phDlg.hidden = false; document.body.style.overflow = 'hidden'; $('#phClose').focus();
+}
+const phClose = () => { phDlg.hidden = true; document.body.style.overflow = ''; if (phFrom) phFrom.focus(); };
+phDlg.addEventListener('click', e => { const t = e.target.closest('button'); if (!t) return; if (t.id === 'phClose') phClose(); if (t.id === 'phPrev') showPhrase(phI - 1); if (t.id === 'phNext') showPhrase(phI + 1); });
+document.addEventListener('keydown', e => { if (!phDlg.hidden && e.key === 'Escape') phClose(); if (!$('#syncDlg').hidden && e.key === 'Escape') syncClose(false); });
 
 /* ---------- routing: journal / travel ---------- */
 function route() {
@@ -358,6 +445,7 @@ function route() {
   $('#journal').hidden = tv; $('#travel').hidden = !tv;
   $('#modeBtn').textContent = tv ? '旅行手帳' : '旅途模式'; $('#modeBtn').setAttribute('href', tv ? '#top' : '#travel');
   if (tv) { navLinks.forEach(x => x.classList.remove('on')); renderTravel(); window.scrollTo(0, 0); }
+  if (location.hash.startsWith('#sync=')) syncIn();
 }
 window.addEventListener('hashchange', route);
 
@@ -389,4 +477,5 @@ if (cv && cv.getContext && !matchMedia('(prefers-reduced-motion: reduce)').match
 $('#photoNote').textContent = T.photoNote;
 renderOverview(); renderItinerary(); renderMap(); renderPlaces(); renderFood(); renderStay(); renderBudget(); renderTransport(); renderSmart(); renderGallery(); renderChecklist();
 route();
+if ('serviceWorker' in navigator && /github\.io$/.test(location.hostname)) navigator.serviceWorker.register('sw.js').catch(() => {});
 }

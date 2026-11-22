@@ -430,3 +430,35 @@ input:focus,select:focus{outline:2px solid var(--shu);outline-offset:1px}
 
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}#snow{display:none}*{transition:none!important}}
 @media print{.nav,.totop,.cue,#snow,.lb{display:none!important}.band{padding:24px 0}}
+
+/* ---------- v4.5: settlement, sync, phrase cards, offline note ---------- */
+.settle{margin-top:16px;padding:14px 16px;background:var(--tint);border-left:3px solid var(--pine)}
+.settle .st{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 12px}
+.settle .st span{font:13px var(--sans);color:var(--mute)}
+.settle .st b{font:700 19px/1.45 var(--zh)}
+.sn{margin:4px 0 0;font:13px/1.65 var(--sans);color:var(--mute)}
+.sbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.offl{margin:4px 0 0;font:13.5px/1.65 var(--sans);color:var(--mute);max-width:46em}
+.offl:empty{display:none}
+.tvnote{margin:0 0 10px;font:13.5px/1.6 var(--sans);color:var(--mute)}
+.qform #qCat,.qform #qWho,.qform #qAdd{grid-column:1/-1}
+.qsum b.sm{font:700 15.5px/1.45 var(--zh);text-align:right}
+.copyrow p{min-width:0;overflow-wrap:anywhere}
+.copyrow .btn{flex:none}
+.phrs{display:flex;flex-wrap:wrap;gap:8px}
+.phb{min-height:42px;padding:0 15px;border:1px solid var(--line);border-radius:99px;background:var(--bg);font:600 14.5px var(--sans);color:var(--ink);cursor:pointer}
+.phb:hover{border-color:var(--ink)}
+.phr{position:fixed;inset:0;z-index:80;background:#FFFFFF;color:#1F1D1B;display:grid;place-items:center;padding:24px max(5vw,20px);overflow:auto}
+.phr[hidden],.sdlg[hidden]{display:none}
+.phin{width:100%;max-width:900px;text-align:center}
+.phr .ja{margin:0;font:700 clamp(34px,7.4vw,72px)/1.38 "Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic","Meiryo",sans-serif;word-break:auto-phrase;overflow-wrap:anywhere}
+.phr .jaaddr{margin:20px 0 0;font:600 clamp(21px,4.2vw,34px)/1.55 "Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic","Meiryo",sans-serif;overflow-wrap:anywhere}
+.phr .ro{margin:24px 0 0;font:italic 400 clamp(17px,2.2vw,22px)/1.45 var(--latin);color:#66635D}
+.phr .zhm{margin:6px 0 0;font:500 clamp(17px,2.2vw,21px)/1.5 var(--sans);color:#66635D}
+.phnav{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:34px}
+.phr .btn{border-color:#1F1D1B;color:#1F1D1B;background:#fff}
+.phr .btn.solid{background:#1F1D1B;color:#fff}
+.sdlg{position:fixed;inset:0;z-index:80;background:rgba(10,12,18,.55);display:grid;place-items:center;padding:20px}
+.dlg{width:100%;max-width:520px;background:var(--card);color:var(--ink);padding:24px;border-top:3px solid var(--shu);box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.dlg h2{margin:0 0 6px;font:700 24px/1.3 var(--zh)}
+.dlg p{margin:8px 0 0;font:15.5px/1.7 var(--sans)}
