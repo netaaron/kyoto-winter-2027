@@ -16,7 +16,7 @@ window.TRIP = {
     { day: 2, photo: 'map-day2', t: '第二日路線：清水寺、三年坂、二年坂、祇園、先斗町' },
     { day: 3, photo: 'map-day3', t: '第三日路線：伏見稻荷大社、京都車站、關西機場' }
   ],
-  photoVer: { 'map-day1': 2, 'map-day2': 3 },
+  photoVer: { 'map-all': 2, 'map-day1': 2, 'map-day2': 3 },
   photoNote: '照片與路線地圖為 AI 生成的情境示意圖，不是實地拍攝；京都一月底不一定會下雪。',
 
   hotel: {
