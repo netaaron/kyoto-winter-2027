@@ -53,7 +53,7 @@ h1 small{display:block;margin-top:14px;font:italic 400 clamp(20px,2.2vw,28px)/1.
 .stats div{padding:16px 0 16px;border-bottom:1px solid var(--line)}
 .stats div:nth-child(odd){padding-right:16px;border-right:1px solid var(--line)}
 .stats div:nth-child(even){padding-left:16px}
-.stats b{display:block;font:500 clamp(34px,3.6vw,46px)/1 var(--latin);font-variant-numeric:lining-nums}
+.stats b{display:block;white-space:nowrap;font:500 clamp(34px,3.6vw,46px)/1 var(--latin);font-variant-numeric:lining-nums}
 .stats span{display:block;margin-top:6px;font:14px/1.5 var(--sans);color:var(--mute)}
 .strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:clamp(32px,4vw,52px)}
 .frame{margin:0}
@@ -175,6 +175,16 @@ details.pr[open] summary::after{transform:rotate(-135deg);margin-top:4px}
 .qc code{font:13px/1.6 var(--mono);color:var(--konjo);overflow-wrap:anywhere}
 @media(max-width:600px){.pbody{grid-template-columns:1fr}.pbody img{max-width:160px}details.pr summary{grid-template-columns:2.4em minmax(0,1fr) 20px}details.pr summary .r{display:none}}
 
+/* verdicts */
+.vt{display:inline-block;margin-left:8px;padding:0 9px;border-radius:99px;font:600 12.5px/1.75 var(--sans);vertical-align:2px;white-space:nowrap}
+.vt.fail{color:var(--shu);border:1px solid currentColor}
+.vt.ok{color:var(--bg);background:var(--pine);border:1px solid var(--pine)}
+.rail .vt{margin-left:6px;vertical-align:0}
+.frame.failed .shot img{filter:grayscale(.45);opacity:.82}
+.verdict{margin:24px 0 0;font:16px/1.75 var(--sans)}
+.verdict .vt{margin:0 10px 0 0;font-size:13.5px}
+@media(max-width:820px){.rail .vt{margin:0}}
+
 /* bilingual */
 .say .en{margin:6px 0 0;font:italic 400 16px/1.55 var(--latin);color:var(--mute);white-space:pre-line}
 .say q{white-space:pre-line}
@@ -249,20 +259,20 @@ details.pr[open] summary::after{transform:rotate(-135deg);margin-top:4px}
   <div class="htop">
     <div>
       <h1>用 AI 做一個網站<small>The making of Kyoto, Winter Journey</small></h1>
-      <p class="lede">從 ChatGPT 生成的一張行程拼貼圖開始，到一個可以在旅途中用手機操作、已經上線的京都旅行網站。總共做了四個版本。這一頁按時間記錄每一步：我說了什麼、AI 做了什麼、結果長什麼樣、學到什麼。</p>
+      <p class="lede">從 ChatGPT 生成的一張行程拼貼圖開始，到一個可以在旅途中用手機操作、已經上線的京都旅行網站。總共做了四個版本：前三版都不滿意，第四版才成功。這一頁按時間記錄每一步：我說了什麼、AI 做了什麼、結果長什麼樣、學到什麼。</p>
     </div>
     <div class="stats">
-      <div><b>約 3.5 小時</b><span>2026年11月22日 18:01 到 21:29</span></div>
-      <div><b>4 個版本</b><span>去背、版畫、互動、照片</span></div>
+      <div><b>3.5 小時</b><span>2026年11月22日 18:01 到 21:29，約三個半小時</span></div>
+      <div><b>4 個版本</b><span>前三版不滿意（失敗），第四版成功</span></div>
       <div><b>16 則</b><span>我下的指令，最短只有兩個字</span></div>
       <div><b>24 張</b><span>ChatGPT 生成的照片與地圖</span></div>
     </div>
   </div>
   <div class="strip">
-    <figure class="frame"><div class="shot"><img src="img/v1-hero.webp" alt="第一版首頁：去背的五重塔與櫻花枝拼貼" width="1200" height="750"></div><figcaption><b>第一版　去背素材</b><time>18:01</time>把拼貼圖切成去背 PNG</figcaption></figure>
-    <figure class="frame"><div class="shot"><img src="img/v2-hero.webp" alt="第二版首頁：版畫風的雪中八坂塔" width="1200" height="750"></div><figcaption><b>第二版　版畫風</b><time>18:30</time>改成統一畫風的向量插畫</figcaption></figure>
-    <figure class="frame"><div class="shot"><img src="img/v3-hero.webp" alt="第三版首頁：版畫封面加上行動按鈕" width="1200" height="750"></div><figcaption><b>第三版　互動工具</b><time>18:51</time>結合 ChatGPT 寫的規格書</figcaption></figure>
-    <figure class="frame"><div class="shot"><img src="img/v4-hero.webp" alt="第四版首頁：雪中八坂塔的寫實照片" width="1200" height="750"></div><figcaption><b>第四版　照片版</b><time>20:06</time>換上 16 張寫實照片，上線</figcaption></figure>
+    <figure class="frame failed"><div class="shot"><img src="img/v1-hero.webp" alt="第一版首頁：去背的五重塔與櫻花枝拼貼" width="1200" height="750"></div><figcaption><b>第一版　去背素材<span class="vt fail">失敗</span></b><time>18:01</time>把拼貼圖切成去背 PNG</figcaption></figure>
+    <figure class="frame failed"><div class="shot"><img src="img/v2-hero.webp" alt="第二版首頁：版畫風的雪中八坂塔" width="1200" height="750"></div><figcaption><b>第二版　版畫風<span class="vt fail">失敗</span></b><time>18:30</time>改成統一畫風的向量插畫</figcaption></figure>
+    <figure class="frame failed"><div class="shot"><img src="img/v3-hero.webp" alt="第三版首頁：版畫封面加上行動按鈕" width="1200" height="750"></div><figcaption><b>第三版　互動工具<span class="vt fail">失敗</span></b><time>18:51</time>結合 ChatGPT 寫的規格書</figcaption></figure>
+    <figure class="frame"><div class="shot"><img src="img/v4-hero.webp" alt="第四版首頁：雪中八坂塔的寫實照片" width="1200" height="750"></div><figcaption><b>第四版　照片版<span class="vt ok">成功</span></b><time>20:06</time>換上 16 張寫實照片，上線</figcaption></figure>
   </div>
 </section>
 
@@ -299,7 +309,7 @@ details.pr[open] summary::after{transform:rotate(-135deg);margin-top:4px}
     </article>
 
     <article class="stage" id="s1">
-      <div class="rail"><time>18:01<small>第 1 則指令</small></time><span class="ver">第一版</span></div>
+      <div class="rail"><time>18:01<small>第 1 則指令</small></time><span class="ver">第一版</span><span class="vt fail">失敗</span></div>
       <div>
         <h3>把拼貼圖切成網站素材</h3>
         <p>第一個想法是直接重用 ChatGPT 的圖：把每個元素切出來，跟文字標題一起排成網站。</p>
@@ -315,12 +325,13 @@ details.pr[open] summary::after{transform:rotate(-135deg);margin-top:4px}
           <figure><div class="shot"><img src="img/v1-hero.webp" alt="第一版首頁" width="1200" height="750" loading="lazy"></div><figcaption>第一版首頁</figcaption></figure>
           <figure><div class="plain"><img src="img/v1-cutouts.webp" alt="切出來的 12 個去背元素" width="1200" height="945" loading="lazy"></div><figcaption>切出來的 12 個去背元素</figcaption></figure>
         </div>
+        <p class="verdict"><span class="vt fail">不滿意（失敗）</span>原因是我在下一則指令說的：「看起來有點不專業」。</p>
         <div class="got"><h4>學到</h4><p>不同來源的去背圖，光線、邊緣和畫風都不一樣，拼在一起就看得出是「拼的」。</p><p>AI 生成圖裡的文字和日期一定要逐字檢查。</p></div>
       </div>
     </article>
 
     <article class="stage" id="s2">
-      <div class="rail"><time>18:30<small>第 2 則指令</small></time><span class="ver">第二版</span></div>
+      <div class="rail"><time>18:30<small>第 2 則指令</small></time><span class="ver">第二版</span><span class="vt fail">失敗</span></div>
       <div>
         <h3>不用拼貼，改求美感</h3>
         <p>第一版的問題不是功能，是質感。這次沒有要求改哪裡，而是說清楚為什麼不滿意、要的是什麼。</p>
@@ -335,12 +346,13 @@ details.pr[open] summary::after{transform:rotate(-135deg);margin-top:4px}
           <figure><div class="shot"><img src="img/v2-hero.webp" alt="第二版首頁：版畫風八坂塔" width="1200" height="750" loading="lazy"></div><figcaption>第二版首頁</figcaption></figure>
           <figure><div class="plain"><img src="img/v2-prints.webp" alt="六張版畫：錦市場、清水寺、千本鳥居、祇園、拉麵、抹茶" width="1200" height="238" loading="lazy"></div><figcaption>每一天、每個主題各一張版畫（後兩張在第三版補畫）</figcaption></figure>
         </div>
+        <p class="verdict"><span class="vt fail">不滿意（失敗）</span>畫面有美感，但功能太少。下一則指令改拿 ChatGPT 寫的規格書，要求跟這一版結合重做。</p>
         <div class="got"><h4>學到</h4><p>說「為什麼不滿意」（看起來不專業）和「想要什麼」（要有美感），比說「再改一次」有用得多。AI 會換掉整個做法，而不是只修細節。</p></div>
       </div>
     </article>
 
     <article class="stage" id="s3">
-      <div class="rail"><time>18:51<small>第 3 則指令</small></time><span class="ver">第三版</span></div>
+      <div class="rail"><time>18:51<small>第 3 則指令</small></time><span class="ver">第三版</span><span class="vt fail">失敗</span></div>
       <div>
         <h3>請另一個 AI 先寫規格書</h3>
         <p>第二版好看但功能少。我請 ChatGPT 寫了一份完整的網站規格書，再交給 Claude，跟第二版的視覺結合。</p>
@@ -360,6 +372,7 @@ details.pr[open] summary::after{transform:rotate(-135deg);margin-top:4px}
           <figure><div class="shot"><img src="img/v3-itinerary.webp" alt="第三版的三日行程分頁" width="1200" height="750" loading="lazy"></div><figcaption>三日行程：分頁、打勾、展開細節</figcaption></figure>
           <figure><div class="shot"><img src="img/v3-travel.webp" alt="第三版的旅途模式" width="1200" height="750" loading="lazy"></div><figcaption>旅途模式：下一站、導航、快速記帳</figcaption></figure>
         </div>
+        <p class="verdict"><span class="vt fail">不滿意（失敗）</span>功能齊全，但插畫的質感有天花板。我在下一則指令說：「感覺還可以再精緻一點」，於是改用寫實照片。</p>
         <div class="got"><h4>學到</h4><p>讓一個 AI 寫需求、另一個 AI 實作，比自己從零想功能完整很多。</p><p>規格書裡寫的不一定都要照做；實作的一方會依實際條件調整，但要說清楚改了什麼。</p></div>
       </div>
     </article>
@@ -382,7 +395,7 @@ details.pr[open] summary::after{transform:rotate(-135deg);margin-top:4px}
     </article>
 
     <article class="stage" id="s5">
-      <div class="rail"><time>20:06<small>第 6 則指令</small></time><span class="ver">第四版</span></div>
+      <div class="rail"><time>20:06<small>第 6 則指令</small></time><span class="ver">第四版</span><span class="vt ok">成功</span></div>
       <div>
         <h3>16 張照片，重新設計</h3>
         <p>照片在 ChatGPT 生成後一次上傳，並給 Claude 一個明確的角色和標準。</p>
@@ -407,6 +420,7 @@ details.pr[open] summary::after{transform:rotate(-135deg);margin-top:4px}
           <figure><div class="shot"><img src="img/v4-food.webp" alt="在京都吃什麼區塊" width="1200" height="750" loading="lazy"></div><figcaption>新增的美食區塊</figcaption></figure>
           <figure><div class="shot"><img src="img/v4-budget.webp" alt="預算與記帳區塊" width="1200" height="750" loading="lazy"></div><figcaption>預算與兩人記帳（示範資料）</figcaption></figure>
         </div>
+        <p class="verdict"><span class="vt ok">成功</span>這一版就是上線的網站。之後只做了兩件事：上傳到 GitHub Pages、換上手繪路線地圖，沒有再整個重做。</p>
         <div class="got"><h4>學到</h4><p>給 AI 一個角色和標準（得獎設計師），它會把重點放在版面、層次與細節，而不只是把照片放上去。</p></div>
       </div>
     </article>
