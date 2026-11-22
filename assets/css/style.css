@@ -174,17 +174,15 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stro
 @media(max-width:480px){.evrow{grid-template-columns:40px max-content minmax(0,1fr) 40px;gap:0 10px}.ev time b{font-size:25px}}
 
 /* map */
-.mapw{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,4fr);gap:clamp(20px,3vw,40px);align-items:start}
+.mapw{display:grid;grid-template-columns:minmax(0,6fr) minmax(0,5fr);gap:clamp(20px,3vw,40px);align-items:start}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
 .chip{min-height:40px;padding:0 16px;border-radius:99px;border:1.5px solid var(--line);background:var(--card);cursor:pointer;font:600 14px var(--sans);display:inline-flex;align-items:center;gap:8px}
 .chip i{width:10px;height:10px;border-radius:50%;background:var(--c,var(--ink))}
 .chip[aria-pressed=true]{border-color:var(--c,var(--ink));box-shadow:inset 0 0 0 1px var(--c,var(--ink))}
-.mapbox{position:relative;background:var(--card);border:1px solid var(--line);aspect-ratio:5/8;max-height:780px;width:100%}
-.mapbox svg{position:absolute;inset:0;width:100%;height:100%}
-.mapbox svg text{paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round}
-.mk{cursor:pointer}
-.mk:focus{outline:none}
-.mk:focus-visible circle.ring{stroke:var(--shu);stroke-width:3}
+.mapbox{position:relative;display:block;width:100%;padding:0;border:1px solid var(--line);background:#EEEBE4;cursor:zoom-in;overflow:hidden}
+.mapbox img{width:100%;aspect-ratio:2/3;object-fit:cover}
+.zoom{position:absolute;right:12px;bottom:12px;display:inline-flex;align-items:center;gap:4px;padding:6px 12px 6px 8px;border-radius:99px;background:rgba(15,17,22,.66);color:#fff;font:600 13px var(--sans);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.zoom svg{width:16px;height:16px}
 .mapnote{margin:10px 0 0;font:13px var(--sans);color:var(--mute)}
 .mpanel{background:var(--card);border:1px solid var(--line);overflow:hidden}
 .mpanel .ph{aspect-ratio:16/9}
@@ -201,7 +199,7 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stro
 .mlist button[aria-current=true] b{color:var(--shu)}
 .dchips{display:flex;gap:6px;flex-wrap:wrap}
 .dchip{font:12.5px/1.7 var(--sans);padding:0 9px;border-radius:99px;color:#fff;background:var(--c)}
-@media(max-width:860px){.mapw{grid-template-columns:1fr}.mapbox{max-height:none}}
+@media(max-width:860px){.mapw{grid-template-columns:1fr}}
 
 /* places: editorial grid */
 .pgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(28px,3.4vw,48px) clamp(18px,2.4vw,32px)}

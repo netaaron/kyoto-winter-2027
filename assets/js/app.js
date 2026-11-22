@@ -126,94 +126,27 @@ document.addEventListener('keydown', e => {
 });
 
 /* ---------- map ---------- */
-const B = { n: 35.0125, s: 34.9625, w: 135.7525, e: 135.7905 }, KX = 91.2, KY = 111.0;
-const RIVER = [[35.0125, 135.7724], [35.0040, 135.7718], [34.9960, 135.7705], [34.9860, 135.7690], [34.9750, 135.7678], [34.9625, 135.7652]];
-const STREETS = [
-  { n: '三條通', p: [[35.0090, 135.7525], [35.0090, 135.7800]], lab: [35.0090, 135.7560] },
-  { n: '四條通', p: [[35.0036, 135.7525], [35.0036, 135.7785]], lab: [35.0036, 135.7560] },
-  { n: '五條通', p: [[34.9960, 135.7525], [34.9960, 135.7835]], lab: [34.9960, 135.7560] },
-  { n: '河原町通', p: [[35.0125, 135.7690], [34.9930, 135.7690]], v: 1, lab: [34.9945, 135.7690] },
-  { n: '烏丸通', p: [[35.0125, 135.7596], [34.9862, 135.7596]], v: 1, lab: [34.9905, 135.7596] },
-  { n: '東大路通', p: [[35.0125, 135.7790], [34.9880, 135.7768]], v: 1, lab: [35.0105, 135.7790] }
-];
-const RAIL = [
-  { n: 'JR 奈良線', p: [[34.9858, 135.7588], [34.9862, 135.7660], [34.9830, 135.7690], [34.9805, 135.7697], [34.9668, 135.7709]], lab: [34.9740, 135.7704] },
-  { n: '京阪本線', p: [[35.0090, 135.7727], [35.0036, 135.7724], [34.9960, 135.7712], [34.9890, 135.7703], [34.9800, 135.7700], [34.9675, 135.7695]] }
-];
-const LBL = { hotel: 'n', pontocho: 'e', kawaramachi: 's', nishiki: 'w', gion: 'e', ninenzaka: 'w', sannenzaka: 'w', kiyomizu: 'e', inari: 'e', 'kyoto-st': 's' };
-const RIVLAB = [34.9705, 135.7667];
 function mapStops(day) {
   if (!day) return [...new Set(T.days.flatMap(d => d.route))];
   return T.days[day - 1].route.filter((v, i, a) => a.indexOf(v) === i);
 }
 function placeDays(id) { return T.days.filter(d => d.route.includes(id) || d.items.some(i => i.place === id || (P[i.place] && P[i.place].same === id))).map(d => d.n); }
-let mapDraw = () => {}, mapRO = null;
 function renderMap() {
-  const box = $('#mapBox');
+  const box = $('#mapBox'), m = T.maps.find(x => x.day === S.mapDay) || T.maps[0];
   box.innerHTML = `<div class="chips" role="group" aria-label="篩選日期">
       <button class="chip" type="button" data-md="0" aria-pressed="${S.mapDay === 0}">全部路線</button>
       ${T.days.map(d => `<button class="chip" type="button" data-md="${d.n}" style="--c:${DAYC[d.n]}" aria-pressed="${S.mapDay === d.n}"><i></i>第${'一二三'[d.n - 1]}日</button>`).join('')}
     </div>
-    <div class="mapw"><div><div class="mapbox" id="mapfig"><svg id="mapsvg" role="img" aria-label="京都行程示意地圖"></svg></div>
-      <p class="mapnote">路線以直線連接各站，僅示意順序；實際路線請用 Google 地圖導航。關西機場在地圖範圍外（西南方約 50 公里）。</p></div>
+    <div class="mapw"><div><button class="mapbox" type="button" data-map="${m.day}" aria-label="放大地圖：${esc(m.t)}">${pic(m.photo, m.t, '(max-width:860px) 92vw, 54vw', true)}<span class="zoom">${ic('plus')}放大</span></button>
+      <p class="mapnote">手繪風格的示意地圖，路線順序以圓圈編號為準；實際走法請用右邊的 Google 地圖導航。關西機場在地圖外，西南方約 50 公里。</p></div>
       <div><div class="mpanel" id="mpanel" aria-live="polite"></div><ul class="mlist" id="mlist"></ul></div></div>`;
-  const svg = $('#mapsvg'), fig = $('#mapfig');
-  const draw = () => {
-    const W = fig.clientWidth, H = fig.clientHeight; if (!W || !H) return;
-    const pad = 26, sx = (W - pad * 2) / ((B.e - B.w) * KX), sy = (H - pad * 2) / ((B.n - B.s) * KY), s = Math.min(sx, sy);
-    const ox = (W - (B.e - B.w) * KX * s) / 2, oy = (H - (B.n - B.s) * KY * s) / 2;
-    const X = lng => ox + (lng - B.w) * KX * s, Y = lat => oy + (B.n - lat) * KY * s;
-    const pts = a => a.map(([la, ln]) => `${X(ln).toFixed(1)},${Y(la).toFixed(1)}`).join(' ');
-    const small = W < 420, fs = small ? 12 : 13.5;
-    let h = `<rect width="${W}" height="${H}" fill="var(--card)"/>`;
-    h += `<polyline points="${pts(RIVER)}" fill="none" stroke="color-mix(in srgb,var(--konjo) 22%,var(--card))" stroke-width="${small ? 10 : 14}" stroke-linecap="round" stroke-linejoin="round"/>`;
-    h += `<text x="${X(RIVLAB[1]) - 12}" y="${Y(RIVLAB[0])}" text-anchor="end" font-size="${fs}" fill="var(--konjo)" font-family="var(--zh)">鴨川</text>`;
-    STREETS.forEach(st => {
-      h += `<polyline points="${pts(st.p)}" fill="none" stroke="var(--line)" stroke-width="2"/>`;
-      if (!small || !st.v) { const [la, ln] = st.lab; h += st.v ? `<text x="${X(ln) - 5}" y="${Y(la)}" font-size="11.5" fill="var(--mute)" font-family="var(--sans)" text-anchor="end">${st.n}</text>` : `<text x="${X(B.w) + 4}" y="${Y(la) - 5}" font-size="11.5" fill="var(--mute)" font-family="var(--sans)">${st.n}</text>`; }
-    });
-    RAIL.forEach((r, i) => {
-      h += `<polyline points="${pts(r.p)}" fill="none" stroke="var(--mute)" stroke-width="2" stroke-dasharray="${i ? '2 4' : '7 4'}"/>`;
-      if (r.lab) h += `<text x="${X(r.lab[1]) - 7}" y="${Y(r.lab[0])}" font-size="11.5" fill="var(--mute)" text-anchor="end" font-family="var(--sans)">${r.n}</text>`;
-    });
-    // KIX arrow from Kyoto Station
-    const ks = P['kyoto-st'];
-    if (S.mapDay !== 2) {
-      const x0 = X(ks.lng), y0 = Y(ks.lat), x1 = Math.max(8, pad - 14), y1 = Math.min(H - 44, y0 + (x0 - x1) * .7);
-      h += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="var(--d1)" stroke-width="2.5" stroke-dasharray="6 5" opacity=".7"/>`;
-      h += `<text x="${x1 + 4}" y="${y1 + 18}" font-size="${fs}" fill="var(--ink)" font-family="var(--zh)">往關西機場</text><text x="${x1 + 4}" y="${y1 + 34}" font-size="11.5" fill="var(--mute)" font-family="var(--sans)">Haruka 約 75–80 分</text>`;
-    }
-    // routes
-    const days = S.mapDay ? [T.days[S.mapDay - 1]] : T.days;
-    days.forEach(d => { h += `<polyline points="${d.route.map(id => `${X(P[id].lng).toFixed(1)},${Y(P[id].lat).toFixed(1)}`).join(' ')}" fill="none" stroke="${DAYC[d.n]}" stroke-width="${S.mapDay ? 3.5 : 2.5}" stroke-linejoin="round" opacity="${S.mapDay ? .95 : .7}"/>`; });
-    // markers
-    const stops = mapStops(S.mapDay);
-    const all = Object.keys(P).filter(id => !P[id].offmap && !P[id].same);
-    all.forEach(id => {
-      const p = P[id], on = stops.includes(id), x = X(p.lng), y = Y(p.lat), sel = S.mapSel === id;
-      const num = S.mapDay && on ? stops.indexOf(id) + 1 : '';
-      const col = S.mapDay ? DAYC[S.mapDay] : (id === 'hotel' ? 'var(--shu)' : DAYC[placeDays(id)[0] || 1]);
-      const r = id === 'hotel' ? 11 : (num ? 11 : 7.5);
-      const d = LBL[id] || 'e', lx = d === 'w' ? x - r - 6 : d === 'e' ? x + r + 6 : x, ly = d === 'n' ? y - r - 7 : d === 's' ? y + r + 15 : y + 5;
-      const anc = d === 'w' ? 'end' : d === 'e' ? 'start' : 'middle';
-      h += `<g class="mk" data-p="${id}" tabindex="${on || !S.mapDay ? 0 : -1}" role="button" aria-label="${p.name}" opacity="${on || !S.mapDay ? 1 : .28}">
-        ${sel ? `<circle cx="${x}" cy="${y}" r="${r + 7}" fill="none" stroke="var(--shu)" stroke-width="2"/>` : ''}
-        <circle class="ring" cx="${x}" cy="${y}" r="${r + 10}" fill="transparent"/>
-        <circle cx="${x}" cy="${y}" r="${r}" fill="${id === 'hotel' ? 'var(--shu)' : col}" stroke="var(--card)" stroke-width="2.5"/>
-        ${num ? `<text x="${x}" y="${y + 4.5}" text-anchor="middle" font-size="12.5" font-weight="700" fill="#fff" stroke="none" font-family="var(--latin)">${num}</text>` : id === 'hotel' ? `<text x="${x}" y="${y + 4}" text-anchor="middle" font-size="11" fill="#fff" stroke="none" font-family="var(--zh)">宿</text>` : ''}
-        <text x="${lx}" y="${ly}" text-anchor="${anc}" font-size="${fs}" font-weight="${sel ? 700 : 600}" fill="var(--ink)" font-family="var(--zh)">${p.name}</text></g>`;
-    });
-    svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.innerHTML = h;
-  };
-  if (mapRO) mapRO.disconnect();
-  mapDraw = draw; mapRO = new ResizeObserver(draw); mapRO.observe(fig); draw();
   renderMapPanel();
 }
 $('#mapBox').addEventListener('click', e => {
   const ch = e.target.closest('.chip'); if (ch) { S.mapDay = +ch.dataset.md; const st = mapStops(S.mapDay); if (!st.includes(S.mapSel)) S.mapSel = st[0]; save(); renderMap(); return; }
-  const m = e.target.closest('.mk,[data-sel]'); if (m) { S.mapSel = m.dataset.p || m.dataset.sel; save(); mapDraw(); renderMapPanel(); }
+  const z = e.target.closest('[data-map]'); if (z) { openLB('map', T.maps.findIndex(x => x.day === +z.dataset.map), z); return; }
+  const m = e.target.closest('[data-sel]'); if (m) { S.mapSel = m.dataset.sel; save(); renderMapPanel(); }
 });
-$('#mapBox').addEventListener('keydown', e => { const m = e.target.closest('.mk'); if (m && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); S.mapSel = m.dataset.p; save(); mapDraw(); renderMapPanel(); const g = $(`.mk[data-p="${S.mapSel}"]`); if (g) g.focus(); } });
 function renderMapPanel() {
   const id = S.mapSel, p = P[id], a = T.attractions.find(x => x.place === id), days = placeDays(id);
   const items = T.days.flatMap(d => d.items.filter(i => i.place === id || (P[i.place] && P[i.place].same === id)).map(i => ({ d, i })));
@@ -226,7 +159,8 @@ function renderMapPanel() {
     ${id !== 'hotel' ? `<a class="btn sm" href="${gdir(T.hotel.en, p.q)}" target="_blank" rel="noopener">${ic('nav')}從飯店出發</a>` : ''}
     ${a ? `<a class="btn sm" href="#place-${id}">景點介紹</a>` : ''}</div></div>`;
   const stops = mapStops(S.mapDay);
-  $('#mlist').innerHTML = stops.map((sid, i) => `<li><button type="button" data-sel="${sid}" aria-current="${sid === id}" style="--c:${S.mapDay ? DAYC[S.mapDay] : (sid === 'hotel' ? 'var(--shu)' : DAYC[placeDays(sid)[0] || 1])}"><span class="n">${S.mapDay ? i + 1 : (sid === 'hotel' ? '宿' : '')}</span><b>${P[sid].name}</b><small>${P[sid].en}</small></button></li>`).join('');
+  const off = stops[0] === 'hotel' ? 1 : 0;
+  $('#mlist').innerHTML = stops.map((sid, i) => `<li><button type="button" data-sel="${sid}" aria-current="${sid === id}" style="--c:${S.mapDay ? (sid === 'hotel' && off ? 'var(--shu)' : DAYC[S.mapDay]) : (sid === 'hotel' ? 'var(--shu)' : DAYC[placeDays(sid)[0] || 1])}"><span class="n">${S.mapDay ? (sid === 'hotel' && off ? '宿' : i + 1 - off) : (sid === 'hotel' ? '宿' : '')}</span><b>${P[sid].name}</b><small>${P[sid].en}</small></button></li>`).join('');
 }
 
 /* ---------- places ---------- */
@@ -353,16 +287,15 @@ function renderSmart() {
 }
 
 /* ---------- gallery + lightbox ---------- */
-let lbI = 0;
+let lbI = 0, lbSet = 'gal', lbReturn = null;
+const lbList = () => lbSet === 'map' ? T.maps : T.gallery;
 function renderGallery() {
   $('#galBox').innerHTML = `<div class="gal">${T.gallery.map((g, i) => `<button type="button" data-g="${i}" aria-label="放大：${esc(g.t)}">${pic(g.photo, g.t, '(max-width:700px) 92vw, 31vw')}<span>${esc(g.t)}</span></button>`).join('')}</div>`;
 }
 const lb = $('#lb');
-function lbShow(i) { lbI = (i + T.gallery.length) % T.gallery.length; const g = T.gallery[lbI], s = PHT[g.photo]; $('#lbImg').src = psrc(g.photo, s[s.length - 1][0]); $('#lbImg').alt = g.t; $('#lbCap').textContent = `${g.t}　${lbI + 1} / ${T.gallery.length}`; }
-let lbReturn = null;
-document.addEventListener('click', e => {
-  const g = e.target.closest('[data-g]'); if (g) { lbReturn = g; lbShow(+g.dataset.g); lb.hidden = false; $('#lbClose').focus(); document.body.style.overflow = 'hidden'; }
-});
+function lbShow(i) { const L = lbList(); lbI = (i + L.length) % L.length; const g = L[lbI], s = PHT[g.photo]; $('#lbImg').src = psrc(g.photo, s[s.length - 1][0]); $('#lbImg').alt = g.t; $('#lbCap').textContent = `${g.t}　${lbI + 1} / ${L.length}`; }
+function openLB(set, i, from) { lbSet = set; lbReturn = from; lbShow(i); lb.hidden = false; $('#lbClose').focus(); document.body.style.overflow = 'hidden'; }
+document.addEventListener('click', e => { const g = e.target.closest('[data-g]'); if (g) openLB('gal', +g.dataset.g, g); });
 const lbClose = () => { lb.hidden = true; document.body.style.overflow = ''; if (lbReturn) lbReturn.focus(); };
 $('#lbClose').addEventListener('click', lbClose);
 $('#lbPrev').addEventListener('click', () => lbShow(lbI - 1));
